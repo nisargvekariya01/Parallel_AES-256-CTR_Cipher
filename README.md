@@ -1,80 +1,113 @@
 # 🔐 Parallel AES-256-CTR Cipher
 
-A high-performance, multi-threaded file encryption and decryption tool. It leverages **AES-256-CTR** for secure data transformation and **HMAC-SHA256** to ensure that files have not been tampered with. The project includes a sleek **ncurses TUI** for easy file selection and configuration.
+**A modern, multithreaded file cipher that combines fast parallel AES-256-CTR with built-in integrity verification for safer encryption workflows.**
 
-## 🚀 Key Features
+![Banner](images/banner.png)
 
-* **⚡ Parallel Processing**: Splits files into chunks and processes them simultaneously using `pthread`, significantly reducing processing time on multi-core systems.
-* **🛡️ Strong Cryptography**:
-* **Cipher**: AES-256-CTR (Counter Mode) for fast, seekable encryption.
-* **Integrity**: HMAC-SHA256 to detect any unauthorized modifications to ciphertext.
-* **Key Derivation**: PKCS5_PBKDF2_HMAC used to derive 32-byte keys from user passwords.
+![Language: C](https://img.shields.io/badge/Language-C-00599C)
+![License: MIT](https://img.shields.io/badge/License-MIT-success)
+![Platform: Linux](https://img.shields.io/badge/Platform-Linux-FCC624)
+![Security: AES-256-CTR](https://img.shields.io/badge/Security-AES--256--CTR-red)
 
+---
 
-* **🖥️ Interactive TUI**: Built with `ncurses`, featuring a built-in file browser and field-based configuration.
-* **📊 Performance Metrics**: Real-time throughput (MB/s) and time-taken reports upon completion.
+## ✨ Key Features
+
+- ⚡ **Parallelized encryption/decryption** with `pthread` to utilize multi-core CPUs efficiently.
+- 🛡️ **AES-256-CTR mode** for secure and high-throughput block processing.
+- 🔍 **HMAC-SHA256 integrity protection** to detect key mismatch or ciphertext tampering.
+- 🔐 **PBKDF2 key stretching** (`PKCS5_PBKDF2_HMAC`) to derive a 256-bit key from user passwords.
+- 🖥️ **Interactive ncurses TUI** with file browser for simple, keyboard-driven operation.
+- 📈 **Runtime metrics** including total processing time and MB/s throughput.
+
+---
+
+## 🧠 Technical Deep-Dive
+
+### Why AES-CTR for parallelism?
+
+AES-CTR converts a block cipher into a stream-like construction where each block is generated from an independent counter value. Because blocks do not depend on prior ciphertext blocks (unlike CBC), file chunks can be encrypted/decrypted concurrently across multiple threads with minimal synchronization.
+
+### HMAC-SHA256 integrity check
+
+After encryption, the project computes an HMAC-SHA256 tag over the ciphertext and stores it in `.hmac_data`. During decryption, the tag is recalculated and compared with the stored value. If verification fails, output is treated as untrusted and removed.
+
+### PBKDF2 for key stretching
+
+User-provided passwords are expanded into a fixed 32-byte AES key using PBKDF2-HMAC-SHA256 with 10,000 iterations (`PKCS5_PBKDF2_HMAC`). This raises the cost of brute-force attacks compared with directly using raw password bytes.
+
+---
 
 ## 📁 Project Structure
 
-| File | Description |
-| --- | --- |
-| `main.c` | Entry point; manages the TUI flow and execution logic. |
-| `encryption_decryption.h` | Core logic for parallel AES processing and HMAC calculation. |
-| `tui.h` | Ncurses implementation for the main menu and file selector. |
-| `project_defs.h` | Global constants, structure definitions, and standard headers. |
-| `utility.h` | Helper functions for file size, timing, and path joining. |
+| Path                      | Purpose                                                                               |
+| ------------------------- | ------------------------------------------------------------------------------------- |
+| `main.c`                  | Entry point, input validation, and encrypt/decrypt dispatch logic.                    |
+| `encryption_decryption.h` | Parallel AES-CTR engine, worker-thread routine, IV/HMAC read/write, and verification. |
+| `tui.h`                   | ncurses-based TUI and interactive file browser implementation.                        |
+| `project_defs.h`          | Shared constants (`MAX_THREADS`, AES/HMAC sizes, filenames) and common headers.       |
+| `utility.h`               | Helpers for file sizing, microsecond timing, and safe path construction.              |
+| `images/`                 | Documentation media (banner and screenshot assets).                                   |
 
-## 🛠️ Installation & Compilation
+---
 
-### Prerequisites
+## 🛠️ Installation & Usage
 
-You must have the **OpenSSL** and **ncurses** development libraries installed on your Linux/Unix system.
+### 1) Install dependencies (Ubuntu/Debian)
 
 ```bash
-# Ubuntu/Debian
-sudo apt-get install libssl-dev libncurses5-dev libncursesw5-dev
-
+sudo apt-get update
+sudo apt-get install -y libssl-dev libncurses-dev
 ```
 
-### Compilation
+### 2) Build
 
-Use `gcc` to compile the project, linking the necessary libraries:
+Use the exact compilation command from the project:
 
 ```bash
 gcc main.c -o parallel_cipher -lpthread -lssl -lcrypto -lncurses
-
 ```
 
-## 📖 Usage
+### 3) Run
 
-1. **Launch**: Run `./parallel_cipher`.
-2. **Navigation**: Use **UP/DOWN** arrows to move between fields.
-3. **File Selection**: Highlight the "Input File Path" and press **ENTER** to open the built-in file browser.
-4. **Configuration**: Enter your password, output name, and the number of threads (1-16).
-5. **Execution**: Press **CTRL+D** or **Backspace** to submit and start the operation.
-6. **Cancel**: Press **F1** at any time to exit.
+```bash
+./parallel_cipher
+```
+
+### Quick Start (TUI navigation)
+
+1. Launch the app with `./parallel_cipher`.
+2. Use **UP/DOWN** arrows to move between fields.
+3. On **Input File Path**, press **ENTER** to open the file browser.
+4. In file browser: use **UP/DOWN** to navigate, **ENTER** to open/select, **ESC** to return.
+5. Set mode to `encrypt` or `decrypt`.
+6. Review/edit **Output File Path**.
+7. Enter your **Encryption Key**.
+8. Set **Threads** (valid range: `1-16`).
+9. Press **CTRL+D** (or **Backspace**) to submit and execute.
+10. Press **F1** anytime to cancel.
+
+---
 
 ## 📸 Screenshots
 
-### 1. Configuration Menu
+### Main TUI
 
-The TUI allows you to set the mode, choose files, and specify thread counts in a clean interface.
+![Main TUI](images/tui_main.png)
 
-<img src="images/s1.png" width="700">
+### File Browser
 
-### 2. Built-in File Browser
+![File Browser](images/file_browser.png)
 
-Easily navigate your local directories to select input files.
+### Completion Summary
 
-<img src="images/s2.png" width="700">
+![Completion](images/completion.png)
 
-### 3. Execution Summary
-
-Once the process finishes, the tool provides a summary of the time taken and the processing speed.
-
-<img src="images/s3.png" width="700">
+---
 
 ## ⚠️ Important Notes
 
-* **Hidden Files**: The tool generates `.iv_data` and `.hmac_data` files during encryption. These are **required** for decryption.
-* **Integrity Check**: If the HMAC verification fails during decryption, the tool will delete the corrupted output file to protect you from tampered data.
+> **Do not lose `.iv_data` and `.hmac_data`.**
+> These hidden files are generated during encryption and are required for successful and verified decryption.
+
+> If HMAC validation fails during decryption, the program treats output as unsafe and deletes the generated output file.
