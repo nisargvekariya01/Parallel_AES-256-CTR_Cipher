@@ -2,8 +2,6 @@
 
 **A modern, multithreaded file cipher that combines fast parallel AES-256-CTR with built-in integrity verification for safer encryption workflows.**
 
-![Banner](images/banner.png)
-
 ![Language: C](https://img.shields.io/badge/Language-C-00599C)
 ![License: MIT](https://img.shields.io/badge/License-MIT-success)
 ![Platform: Linux](https://img.shields.io/badge/Platform-Linux-FCC624)
